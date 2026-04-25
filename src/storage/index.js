@@ -1,3 +1,2 @@
-import { localStorageAdapter } from "./localStorageAdapter.js";
-
-export const storage = localStorageAdapter;
+export { localStorageAdapter as storage } from "./localStorageAdapter.js";
+export { localStorageAdapter } from "./localStorageAdapter.js";
