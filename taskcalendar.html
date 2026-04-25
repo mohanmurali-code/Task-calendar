@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Calendar</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f8;
+      color: #333;
+    }
+    header {
+      background: #4a90e2;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    main {
+      max-width: 960px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .calendar div {
+      background: #e9f2ff;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .calendar .header {
+      background: #d0e5ff;
+      font-weight: bold;
+    }
+    .task {
+      background: #f7f9fc;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      border-left: 4px solid #4a90e2;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Task Calendar</h1>
+    <p>Plan your week and keep your tasks on track.</p>
+  </header>
+  <main>
+    <section>
+      <h2>Weekly Overview</h2>
+      <div class="calendar">
+        <div class="header">Sunday</div>
+        <div class="header">Monday</div>
+        <div class="header">Tuesday</div>
+        <div class="header">Wednesday</div>
+        <div class="header">Thursday</div>
+        <div class="header">Friday</div>
+        <div class="header">Saturday</div>
+        <div>1<br><span class="task">Set goals for the week</span></div>
+        <div>2<br><span class="task">Team sync meeting</span></div>
+        <div>3<br><span class="task">Project planning</span></div>
+        <div>4<br><span class="task">Design review</span></div>
+        <div>5<br><span class="task">Code sprint</span></div>
+        <div>6<br><span class="task">QA testing</span></div>
+        <div>7<br><span class="task">Weekly wrap-up</span></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
