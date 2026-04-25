@@ -20,6 +20,8 @@ jobs:
 
       - name: Set up Pages
         uses: actions/configure-pages@v4
+        with:
+          enablement: true
 
       - name: Upload artifact for Pages
         uses: actions/upload-pages-artifact@v5
