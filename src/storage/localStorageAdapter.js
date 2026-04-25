@@ -4,91 +4,71 @@ const PROFILE_KEY = "task-calendar-profile";
 const ROUTINES_KEY = "task-calendar-routines";
 const TAGS_KEY = "task-calendar-tags";
 
-function migrateV2ToV3(items) {
-  return items.map((item) => ({
+function migrateItem(item) {
+  return {
+    tags: [],
+    isRoutine: false,
+    routineId: null,
+    color: null,
+    isPinned: false,
+    updatedAt: item.createdAt,
+    title: "",
+    pomodoroCount: 0,  // NEW — persisted session count
     ...item,
-    tags: item.tags || [],
-    isRoutine: item.isRoutine || false,
-    routineId: item.routineId || null,
-    color: item.color || null,
-    isPinned: item.isPinned || false,
-    updatedAt: item.updatedAt || item.createdAt,
-    title: item.title || "",
-  }));
+    pomodoroCount: item.pomodoroCount ?? 0,
+  };
 }
 
 export const localStorageAdapter = {
-  // ── Items ──────────────────────────────────────────────
   loadItems() {
     try {
       const v3 = localStorage.getItem(ITEMS_KEY);
-      if (v3) return JSON.parse(v3);
-
-      // Migrate from v2
+      if (v3) {
+        const parsed = JSON.parse(v3);
+        // Ensure pomodoroCount exists on old v3 items
+        return parsed.map((item) => ({ pomodoroCount: 0, ...item }));
+      }
       const v2 = localStorage.getItem(ITEMS_KEY_V2);
       if (v2) {
-        const migrated = migrateV2ToV3(JSON.parse(v2));
+        const migrated = JSON.parse(v2).map(migrateItem);
         localStorage.setItem(ITEMS_KEY, JSON.stringify(migrated));
         return migrated;
       }
       return [];
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   },
 
   saveItems(items) {
     localStorage.setItem(ITEMS_KEY, JSON.stringify(items));
   },
 
-  clearItems() {
-    localStorage.removeItem(ITEMS_KEY);
-  },
+  clearItems() { localStorage.removeItem(ITEMS_KEY); },
 
-  // ── Profile ────────────────────────────────────────────
   loadProfile() {
     try {
       return JSON.parse(localStorage.getItem(PROFILE_KEY)) || { name: "", initials: "ME", color: "#7c4dff" };
-    } catch {
-      return { name: "", initials: "ME", color: "#7c4dff" };
-    }
+    } catch { return { name: "", initials: "ME", color: "#7c4dff" }; }
   },
 
-  saveProfile(profile) {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-  },
+  saveProfile(p) { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); },
 
-  // ── Routines ───────────────────────────────────────────
   loadRoutines() {
-    try {
-      return JSON.parse(localStorage.getItem(ROUTINES_KEY)) || [];
-    } catch {
-      return [];
-    }
+    try { return JSON.parse(localStorage.getItem(ROUTINES_KEY)) || []; }
+    catch { return []; }
   },
 
-  saveRoutines(routines) {
-    localStorage.setItem(ROUTINES_KEY, JSON.stringify(routines));
-  },
+  saveRoutines(r) { localStorage.setItem(ROUTINES_KEY, JSON.stringify(r)); },
 
-  // ── Tags ───────────────────────────────────────────────
   loadTags() {
-    try {
-      return JSON.parse(localStorage.getItem(TAGS_KEY)) || [];
-    } catch {
-      return [];
-    }
+    try { return JSON.parse(localStorage.getItem(TAGS_KEY)) || []; }
+    catch { return []; }
   },
 
-  saveTags(tags) {
-    localStorage.setItem(TAGS_KEY, JSON.stringify(tags));
-  },
+  saveTags(t) { localStorage.setItem(TAGS_KEY, JSON.stringify(t)); },
 
-  // ── Nuclear clear ──────────────────────────────────────
   clearAll() {
-    [ITEMS_KEY, ITEMS_KEY_V2, PROFILE_KEY, ROUTINES_KEY, TAGS_KEY].forEach((k) =>
-      localStorage.removeItem(k),
-    );
+    [ITEMS_KEY, ITEMS_KEY_V2, PROFILE_KEY, ROUTINES_KEY, TAGS_KEY]
+      .forEach((k) => localStorage.removeItem(k));
   },
 };
 
