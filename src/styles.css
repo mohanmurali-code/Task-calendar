@@ -779,6 +779,9 @@ h1 {
     box-shadow: 0 16px 50px rgba(27,29,43,.2);
     transform: translateX(-50%);
     backdrop-filter: blur(20px);
+    max-width: calc(100vw - 20px);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .dock-btn {
@@ -1167,7 +1170,7 @@ h1 {
   font-family: Outfit, sans-serif;
   font-size: 20px;
   font-weight: 700;
-  min-width: 200px;
+  min-width: auto;
   text-align: right;
 }
 .week-grid {
@@ -1175,7 +1178,7 @@ h1 {
   flex-direction: column;
   border: 1px solid var(--line);
   border-radius: 16px;
-  overflow: hidden;
+  overflow-x: auto;
   background: #fff;
 }
 .week-header {
@@ -1183,6 +1186,7 @@ h1 {
   grid-template-columns: 60px repeat(7, 1fr);
   border-bottom: 1px solid var(--line);
   background: var(--soft);
+  min-width: 600px;
 }
 .week-hour-col {
   padding: 12px 8px;
@@ -1208,6 +1212,7 @@ h1 {
   display: grid;
   grid-template-columns: 60px repeat(7, 1fr);
   border-bottom: 1px solid var(--line);
+  min-width: 600px;
 }
 .week-row:last-child { border-bottom: none; }
 .week-cell {
@@ -1241,7 +1246,7 @@ h1 {
 .month-agenda {
   border: 1px solid var(--line);
   border-radius: 16px;
-  overflow: hidden;
+  overflow-x: auto;
   background: var(--soft);
 }
 .month-grid {
@@ -1249,6 +1254,7 @@ h1 {
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
   background: var(--line);
+  min-width: 600px;
 }
 .month-cell {
   background: #fff;
