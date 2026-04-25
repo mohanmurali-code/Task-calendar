@@ -1,82 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Calendar</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f4f6f8;
-      color: #333;
-    }
-    header {
-      background: #4a90e2;
-      color: #fff;
-      padding: 20px;
-      text-align: center;
-    }
-    main {
-      max-width: 960px;
-      margin: 20px auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-    .calendar {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .calendar div {
-      background: #e9f2ff;
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
-    }
-    .calendar .header {
-      background: #d0e5ff;
-      font-weight: bold;
-    }
-    .task {
-      background: #f7f9fc;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 10px;
-      border-left: 4px solid #4a90e2;
-      text-align: left;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glass Calendar</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{background:linear-gradient(135deg,#0f172a,#1d4ed8,#9333ea);min-height:100vh}.glass{background:rgba(255,255,255,.12);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.18)}.day:hover{transform:translateY(-2px)}
+</style>
+<meta name="theme-color" content="#1d4ed8">
+<link rel="manifest" href="manifest.json">
 </head>
-<body>
-  <header>
-    <h1>Task Calendar</h1>
-    <p>Plan your week and keep your tasks on track.</p>
-  </header>
-  <main>
-    <section>
-      <h2>Weekly Overview</h2>
-      <div class="calendar">
-        <div class="header">Sunday</div>
-        <div class="header">Monday</div>
-        <div class="header">Tuesday</div>
-        <div class="header">Wednesday</div>
-        <div class="header">Thursday</div>
-        <div class="header">Friday</div>
-        <div class="header">Saturday</div>
-        <div>1<br><span class="task">Set goals for the week</span></div>
-        <div>2<br><span class="task">Team sync meeting</span></div>
-        <div>3<br><span class="task">Project planning</span></div>
-        <div>4<br><span class="task">Design review</span></div>
-        <div>5<br><span class="task">Code sprint</span></div>
-        <div>6<br><span class="task">QA testing</span></div>
-        <div>7<br><span class="task">Weekly wrap-up</span></div>
-      </div>
-    </section>
-  </main>
+<body class="text-white flex items-center justify-center p-4">
+<div class="glass w-full max-w-4xl rounded-3xl shadow-2xl p-4 md:p-6">
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+<div>
+<h1 class="text-2xl md:text-4xl font-bold">Calendar</h1>
+<p id="subtitle" class="text-white/70"></p>
+</div>
+<div class="flex gap-2">
+<button id="prev" class="glass px-4 py-2 rounded-2xl">◀</button>
+<button id="today" class="glass px-4 py-2 rounded-2xl">Today</button>
+<button id="next" class="glass px-4 py-2 rounded-2xl">▶</button>
+</div>
+</div>
+<div class="grid grid-cols-7 gap-2 text-center text-sm md:text-base mb-2 text-white/70">
+<div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+</div>
+<div id="grid" class="grid grid-cols-7 gap-2"></div>
+</div>
+<script>
+const grid=document.getElementById('grid');const subtitle=document.getElementById('subtitle');let current=new Date();
+function render(){grid.innerHTML='';const y=current.getFullYear(),m=current.getMonth();subtitle.textContent=current.toLocaleString('default',{month:'long',year:'numeric'});const first=new Date(y,m,1).getDay();const days=new Date(y,m+1,0).getDate();const today=new Date();for(let i=0;i<first;i++){grid.innerHTML+=`<div class='h-16 md:h-24'></div>`;}for(let d=1;d<=days;d++){const isToday=d===today.getDate()&&m===today.getMonth()&&y===today.getFullYear();grid.innerHTML+=`<button class='day glass h-16 md:h-24 rounded-2xl transition text-sm md:text-lg font-semibold ${isToday?'ring-2 ring-cyan-300':''}'>${d}</button>`;}}
+document.getElementById('prev').onclick=()=>{current.setMonth(current.getMonth()-1);render()};
+document.getElementById('next').onclick=()=>{current.setMonth(current.getMonth()+1);render()};
+document.getElementById('today').onclick=()=>{current=new Date();render()};render();
+</script>
+<script>
+if('serviceWorker' in navigator){const swCode=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('fetch',e=>{});`;const blob=new Blob([swCode],{type:'text/javascript'});navigator.serviceWorker.register(URL.createObjectURL(blob));}
+const manifest={name:'Glass Calendar',short_name:'Calendar',start_url:'.',display:'standalone',background_color:'#0f172a',theme_color:'#1d4ed8',icons:[]};const mblob=new Blob([JSON.stringify(manifest)],{type:'application/json'});const murl=URL.createObjectURL(mblob);document.querySelector('link[rel="manifest"]').href=murl;
+</script>
 </body>
 </html>
