@@ -3,7 +3,6 @@ import { storage } from "./storage/index.js";
 import { buildMonthDays, formatDateKey, fromDateKey, monthLabel, toDateKey } from "./utils/date.js";
 
 const todayKey = toDateKey(new Date());
-const emptySwipe = { tracking: false, x: 0, y: 0 };
 
 function createItemId() {
   if (crypto.randomUUID) return crypto.randomUUID();
@@ -26,7 +25,6 @@ export default function App() {
   const [taskFilter, setTaskFilter] = useState("all");
   const [taskDraft, setTaskDraft] = useState({ title: "", time: "", priority: "normal", text: "" });
   const [noteDraft, setNoteDraft] = useState("");
-  const [swipe, setSwipe] = useState(emptySwipe);
 
   const monthItems = useMemo(() => {
     const year = currentMonth.getFullYear();
@@ -135,17 +133,6 @@ export default function App() {
     persist(items.filter((item) => !(item.date === selectedDate && item.type === "task" && item.done)));
   }
 
-  function handleSwipeEnd(event) {
-    if (!swipe.tracking) return;
-    const dx = event.clientX - swipe.x;
-    const dy = event.clientY - swipe.y;
-    setSwipe(emptySwipe);
-
-    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      changeMonth(dx < 0 ? 1 : -1);
-    }
-  }
-
   return (
     <main className="app">
       <header className="topbar">
@@ -179,9 +166,7 @@ export default function App() {
           monthStats={monthStats}
           selectedDate={selectedDate}
           onSelectDate={selectDate}
-          onSwipeCancel={() => setSwipe(emptySwipe)}
-          onSwipeEnd={handleSwipeEnd}
-          onSwipeStart={(event) => setSwipe({ tracking: true, x: event.clientX, y: event.clientY })}
+          onChangeMonth={changeMonth}
         />
 
         <aside className="sidebar">
@@ -237,8 +222,58 @@ export default function App() {
   );
 }
 
-function CalendarPanel({ currentMonth, items, monthStats, onSelectDate, onSwipeCancel, onSwipeEnd, onSwipeStart, selectedDate }) {
+function CalendarPanel({ currentMonth, items, monthStats, onSelectDate, onChangeMonth, selectedDate }) {
   const month = buildMonthDays(currentMonth);
+  const [dragState, setDragState] = useState({ isDragging: false, startX: 0, startY: 0, currentX: 0 });
+  const [animating, setAnimating] = useState(false);
+  const [dragX, setDragX] = useState(0);
+
+  function handlePointerDown(e) {
+    if (animating) return;
+    e.target.setPointerCapture(e.pointerId);
+    setDragState({ isDragging: true, startX: e.clientX, startY: e.clientY, currentX: e.clientX });
+  }
+
+  function handlePointerMove(e) {
+    if (!dragState.isDragging) return;
+    setDragState((prev) => ({ ...prev, currentX: e.clientX }));
+  }
+
+  function handlePointerUp(e) {
+    if (!dragState.isDragging) return;
+    e.target.releasePointerCapture(e.pointerId);
+
+    const dx = e.clientX - dragState.startX;
+    const dy = e.clientY - dragState.startY;
+
+    setDragState({ isDragging: false, startX: 0, startY: 0, currentX: 0 });
+
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      const direction = dx < 0 ? 1 : -1;
+      setAnimating(true);
+      setDragX(direction > 0 ? -window.innerWidth : window.innerWidth);
+      
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+      
+      setTimeout(() => {
+        onChangeMonth(direction);
+        setDragX(direction > 0 ? window.innerWidth : -window.innerWidth);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setDragX(0);
+            setTimeout(() => setAnimating(false), 300);
+          });
+        });
+      }, 300);
+    } else {
+      setDragX(0);
+    }
+  }
+
+  const currentDragX = dragState.isDragging ? dragState.currentX - dragState.startX : dragX;
+  const transition = dragState.isDragging || (animating && Math.abs(dragX) > 500) ? "none" : "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
 
   return (
     <section className="panel" aria-label="Calendar">
@@ -260,7 +295,14 @@ function CalendarPanel({ currentMonth, items, monthStats, onSelectDate, onSwipeC
         ))}
       </div>
 
-      <div className="calendar-grid" onPointerCancel={onSwipeCancel} onPointerDown={onSwipeStart} onPointerUp={onSwipeEnd}>
+      <div 
+        className="calendar-grid" 
+        onPointerCancel={handlePointerUp} 
+        onPointerDown={handlePointerDown} 
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        style={{ transform: `translateX(${currentDragX}px)`, transition, willChange: "transform" }}
+      >
         {Array.from({ length: month.firstDay }, (_, index) => (
           <div className="empty" key={`empty-${index}`} />
         ))}
