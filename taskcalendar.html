@@ -6,22 +6,22 @@
 <title>Glass Calendar</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body{background:linear-gradient(135deg,#0f172a,#1d4ed8,#9333ea);min-height:100vh}.glass{background:rgba(255,255,255,.12);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.18)}.day:hover{transform:translateY(-2px)}
+body{background:linear-gradient(135deg,#0f172a,#1d4ed8,#9333ea);min-height:100vh}.glass{background:rgba(255,255,255,.12);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.18)}.day:hover{transform:translateY(-2px)}#calendar{touch-action:pan-y}
 </style>
 <meta name="theme-color" content="#1d4ed8">
 <link rel="manifest" href="manifest.json">
 </head>
 <body class="text-white flex items-center justify-center p-4">
-<div class="glass w-full max-w-4xl rounded-3xl shadow-2xl p-4 md:p-6">
+<div id="calendar" class="glass w-full max-w-4xl rounded-3xl shadow-2xl p-4 md:p-6">
 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
 <div>
 <h1 class="text-2xl md:text-4xl font-bold">Calendar</h1>
 <p id="subtitle" class="text-white/70"></p>
 </div>
 <div class="flex gap-2">
-<button id="prev" class="glass px-4 py-2 rounded-2xl">◀</button>
+<button id="prev" class="glass px-4 py-2 rounded-2xl">&larr;</button>
 <button id="today" class="glass px-4 py-2 rounded-2xl">Today</button>
-<button id="next" class="glass px-4 py-2 rounded-2xl">▶</button>
+<button id="next" class="glass px-4 py-2 rounded-2xl">&rarr;</button>
 </div>
 </div>
 <div class="grid grid-cols-7 gap-2 text-center text-sm md:text-base mb-2 text-white/70">
@@ -30,11 +30,15 @@ body{background:linear-gradient(135deg,#0f172a,#1d4ed8,#9333ea);min-height:100vh
 <div id="grid" class="grid grid-cols-7 gap-2"></div>
 </div>
 <script>
-const grid=document.getElementById('grid');const subtitle=document.getElementById('subtitle');let current=new Date();
+const calendar=document.getElementById('calendar');const grid=document.getElementById('grid');const subtitle=document.getElementById('subtitle');let current=new Date();let swipeStartX=0;let swipeStartY=0;let swipeTracking=false;
 function render(){grid.innerHTML='';const y=current.getFullYear(),m=current.getMonth();subtitle.textContent=current.toLocaleString('default',{month:'long',year:'numeric'});const first=new Date(y,m,1).getDay();const days=new Date(y,m+1,0).getDate();const today=new Date();for(let i=0;i<first;i++){grid.innerHTML+=`<div class='h-16 md:h-24'></div>`;}for(let d=1;d<=days;d++){const isToday=d===today.getDate()&&m===today.getMonth()&&y===today.getFullYear();grid.innerHTML+=`<button class='day glass h-16 md:h-24 rounded-2xl transition text-sm md:text-lg font-semibold ${isToday?'ring-2 ring-cyan-300':''}'>${d}</button>`;}}
-document.getElementById('prev').onclick=()=>{current.setMonth(current.getMonth()-1);render()};
-document.getElementById('next').onclick=()=>{current.setMonth(current.getMonth()+1);render()};
+function changeMonth(offset){current.setMonth(current.getMonth()+offset);render()}
+document.getElementById('prev').onclick=()=>changeMonth(-1);
+document.getElementById('next').onclick=()=>changeMonth(1);
 document.getElementById('today').onclick=()=>{current=new Date();render()};render();
+calendar.addEventListener('pointerdown',e=>{swipeStartX=e.clientX;swipeStartY=e.clientY;swipeTracking=true});
+calendar.addEventListener('pointerup',e=>{if(!swipeTracking)return;swipeTracking=false;const dx=e.clientX-swipeStartX;const dy=e.clientY-swipeStartY;if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.5){changeMonth(dx<0?1:-1)}});
+calendar.addEventListener('pointercancel',()=>{swipeTracking=false});
 </script>
 <script>
 if('serviceWorker' in navigator){const swCode=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('fetch',e=>{});`;const blob=new Blob([swCode],{type:'text/javascript'});navigator.serviceWorker.register(URL.createObjectURL(blob));}
