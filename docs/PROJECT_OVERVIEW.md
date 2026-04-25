@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Task Calendar is a browser-based calendar planner for day-level task and note management. It is designed as a lightweight static web app that can run locally without a build step, backend service, or package installation.
+Task Calendar is a browser-based calendar planner for day-level task and note management. It is designed as a GitHub Pages deployable static app built with Vite and React.
 
 ## Current Scope
 
@@ -41,6 +41,9 @@ The current implementation does not include:
 
 ## Repository Entry Points
 
-- `index.html`: Redirects users to the main calendar page.
-- `taskcalendar.html`: Contains the complete app UI, styling, behavior, and local persistence logic.
-- `server.js`: Serves the static files locally through Node.js.
+- `index.html`: Vite entry point.
+- `taskcalendar.html`: Compatibility redirect for older links.
+- `src/App.jsx`: Main React planner application.
+- `src/styles.css`: Application styling and responsive layout.
+- `src/storage/`: Storage adapter layer.
+- `server.js`: Legacy static server helper.

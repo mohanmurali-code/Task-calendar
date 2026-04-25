@@ -14,7 +14,7 @@
    http://localhost:8000/taskcalendar.html
    ```
 
-3. Edit app code in `taskcalendar.html`.
+3. Edit app code in `src/`.
 4. Refresh the browser.
 5. Run the checks in `docs/TEST_PLAN.md`.
 6. Update documentation when features or behavior change.
@@ -54,11 +54,21 @@ If the item schema changes incompatibly:
 
 ## Code Organization Guidance
 
-The app currently lives in one HTML file. If it grows further, split it into:
+The app has been split into a Vite and React structure. Keep these responsibilities separated:
 
-- `styles.css` for styling.
-- `app.js` for runtime behavior.
-- `storage.js` for persistence helpers.
-- `calendar.js` for date and calendar rendering logic.
+- `src/App.jsx` for application composition and feature behavior.
+- `src/styles.css` for styling.
+- `src/storage/` for persistence helpers.
+- `src/utils/date.js` for date and calendar helpers.
 
-This split should be done as a dedicated refactor with regression testing.
+If the app grows further, split large React sections into `src/components/`.
+
+## GitHub Pages Development Guidance
+
+Production behavior must remain static-host compatible:
+
+- Do not depend on `server.js` for app features.
+- Do not add server-only APIs to required user workflows.
+- Keep browser storage as the baseline offline mode.
+- Add GitHub sync as an optional adapter.
+- Do not commit tokens, credentials, or user profile data unless intentionally using example data.

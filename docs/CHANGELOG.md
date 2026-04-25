@@ -14,11 +14,16 @@
 - Local browser persistence with `localStorage`.
 - Local Node static server.
 - Enterprise-style documentation set.
+- High-level and low-level GitHub Pages design documents.
+- Vite and React application structure.
+- Storage adapter boundary for browser persistence.
+- GitHub Pages workflow that builds and publishes `dist/`.
 
 ### Changed
 
 - Replaced the original compact glass calendar implementation with a larger planner interface.
 - Updated README to describe the expanded application and documentation.
+- Replaced the single-file planner runtime with a React application under `src/`.
 
 ### Notes
 

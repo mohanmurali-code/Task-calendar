@@ -2,28 +2,32 @@
 
 ## Application Type
 
-Task Calendar is a static single-page application implemented in one HTML file. It uses native browser APIs and does not require a framework or build system.
+Task Calendar is a static single-page application implemented with Vite and React. It uses browser APIs for local persistence and builds to static assets for GitHub Pages.
 
 ## Runtime Components
 
 | Component | File | Responsibility |
 | --- | --- | --- |
 | Redirect page | `index.html` | Sends users to `taskcalendar.html`. |
-| Planner app | `taskcalendar.html` | Renders UI, handles events, manages state, and persists data. |
-| Static server | `server.js` | Serves files during local development. |
+| Planner app | `src/App.jsx` | Renders UI, handles events, manages state, and persists data through storage. |
+| App entry | `src/main.jsx` | Mounts the React application. |
+| Styles | `src/styles.css` | Defines the visual system and responsive layout. |
+| Storage adapter | `src/storage/` | Encapsulates persistence behavior. |
+| Static server | `server.js` | Legacy helper for serving static files during local development. |
 | Browser storage | `localStorage` | Stores tasks and notes on the user's device. |
 
 ## Client-Side State
 
-Runtime state is held in a single `state` object inside `taskcalendar.html`.
+Runtime state is held in React state inside `src/App.jsx`.
 
 | Field | Purpose |
 | --- | --- |
-| `current` | First day of the visible calendar month. |
-| `selected` | Selected day in `YYYY-MM-DD` format. |
+| `currentMonth` | First day of the visible calendar month. |
+| `selectedDate` | Selected day in `YYYY-MM-DD` format. |
 | `mode` | Active sidebar mode: `tasks` or `notes`. |
 | `items` | Persisted task and note records. |
-| `swipeStartX`, `swipeStartY`, `swipeTracking` | Gesture tracking for month swipes. |
+| `searchQuery`, `taskFilter` | Feed search and filtering controls. |
+| `swipe` | Gesture tracking for month swipes. |
 
 ## Data Model
 
@@ -63,7 +67,7 @@ Tasks and notes are stored together in `state.items`.
 
 ## Persistence
 
-The app persists all planner records in browser `localStorage` under:
+The app persists all planner records through `src/storage/localStorageAdapter.js` in browser `localStorage` under:
 
 ```text
 task-calendar-v2
@@ -109,7 +113,16 @@ flowchart TD
 
 ## Known Technical Debt
 
-- The main app is contained in a single large HTML file.
+- The GitHub adapter is designed but not implemented yet.
 - There is no automated browser test suite.
 - There is no formal schema migration process for local storage.
 - No offline asset caching beyond the minimal service worker registration.
+
+## GitHub Pages Target Architecture
+
+The long-term deployable architecture is documented in:
+
+- [High-Level Design: GitHub Pages Deployable Planner](HLD_GITHUB_PAGES.md)
+- [Low-Level Design: GitHub Pages Deployable Planner](LLD_GITHUB_PAGES.md)
+
+The key constraint is that GitHub Pages cannot run `server.js` or write JSON files directly. Future persistence should be implemented through static-compatible storage adapters.

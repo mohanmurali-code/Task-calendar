@@ -3,36 +3,38 @@
 ## Prerequisites
 
 - Git
-- Node.js
+- Node.js 22 or newer
 - A modern browser
 
-No package installation is required.
+## Install Dependencies
+
+```powershell
+npm install
+```
 
 ## Local Startup
 
 From the repository root:
 
 ```powershell
-node server.js
+npm run dev
 ```
 
-Open:
+Open the Vite URL, usually:
 
 ```text
-http://localhost:8000
+http://127.0.0.1:5173/Task-calendar/
 ```
 
-The root page redirects to:
+## Production Build
 
-```text
-http://localhost:8000/taskcalendar.html
+```powershell
+npm run build
 ```
 
 ## Local Shutdown
 
-Stop the terminal process running `server.js` with `Ctrl+C`.
-
-If the server was started in the background, identify and stop the Node process that is serving the repo.
+Stop the terminal process running Vite with `Ctrl+C`.
 
 ## Common Operations
 
@@ -75,14 +77,14 @@ location.reload();
 
 | Symptom | Likely Cause | Action |
 | --- | --- | --- |
-| Page does not load | Server not running | Run `node server.js`. |
-| Port already in use | Another process is using port `8000` | Stop the other process or set `PORT` before starting the server. |
+| Page does not load | Vite server not running | Run `npm run dev`. |
+| Port already in use | Another process is using the Vite port | Stop the other process or use the alternate URL printed by Vite. |
 | Tasks disappear | Browser site data was cleared | Data is local-only and cannot be recovered from the app. |
 | Styling looks different | Browser compatibility or cached file | Refresh the page and use a modern browser. |
 
 ## Configuration
 
-The server uses port `8000` by default. Override it with:
+Vite chooses port `5173` by default and prints the active URL at startup.
 
 ```powershell
 $env:PORT=8080

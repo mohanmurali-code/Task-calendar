@@ -75,3 +75,58 @@ Add separate documents for overview, architecture, requirements traceability, ru
 - Requirements can be mapped to implementation and verification steps.
 - Future contributors have a clearer operating model.
 - Documentation needs to be maintained with feature changes.
+
+## ADR-005: Target GitHub Pages Static Deployment
+
+Status: Accepted
+
+### Context
+
+The application should be deployable on GitHub Pages while continuing to grow into a more capable planner.
+
+### Decision
+
+Keep the primary application static and GitHub Pages compatible. Do not rely on `server.js` for production behavior. Treat `server.js` as a local development helper only.
+
+### Consequences
+
+- The app can be hosted from the repository without a backend.
+- Any future persistence beyond browser storage must use browser-compatible mechanisms such as import/export or GitHub API calls.
+- GitHub repository sync must not depend on hard-coded credentials.
+
+## ADR-006: Use Storage Adapters for Persistence Complexity
+
+Status: Accepted
+
+### Context
+
+The app may need local browser storage, local JSON profiles, import/export, and GitHub-backed data.
+
+### Decision
+
+Introduce a storage adapter interface before implementing GitHub sync.
+
+### Consequences
+
+- UI code can stay independent from storage details.
+- The app can support multiple persistence modes.
+- GitHub sync can be added without rewriting calendar and task logic.
+
+## ADR-007: Use Vite and React
+
+Status: Accepted
+
+### Context
+
+The application is growing beyond a small static HTML demo and needs cleaner organization while remaining deployable to GitHub Pages.
+
+### Decision
+
+Use Vite and React for the frontend, with a GitHub Pages build workflow that publishes `dist/`.
+
+### Consequences
+
+- The app gains a maintainable component structure.
+- Local development uses `npm run dev`.
+- GitHub Pages deployment requires `npm ci` and `npm run build`.
+- The final hosted artifact remains static HTML, CSS, and JavaScript.

@@ -16,32 +16,32 @@ Recommended test types:
 ### Server Response
 
 ```powershell
-Invoke-WebRequest -UseBasicParsing http://localhost:8000/taskcalendar.html
+npm run build
 ```
 
 Expected result:
 
 ```text
-StatusCode: 200
+dist build completes successfully
 ```
 
 ### Inline Script Parse
 
 ```powershell
-node -e "const fs=require('fs'); const html=fs.readFileSync('taskcalendar.html','utf8'); const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]); scripts.forEach((s,i)=>{try{new Function(s)}catch(e){console.error('Script '+(i+1)+' parse failed: '+e.message); process.exitCode=1}}); if(!process.exitCode) console.log(scripts.length+' inline scripts parsed successfully.');"
+npm run dev
 ```
 
 Expected result:
 
 ```text
-1 inline scripts parsed successfully.
+Vite starts and serves the React app.
 ```
 
 ## Manual Functional Test Cases
 
 | ID | Scenario | Steps | Expected Result |
 | --- | --- | --- | --- |
-| TC-001 | Load app | Open `http://localhost:8000/taskcalendar.html` | App renders calendar and sidebar. |
+| TC-001 | Load app | Open the Vite dev URL | App renders calendar and sidebar. |
 | TC-002 | Navigate with buttons | Click previous and next controls | Month title and day grid change. |
 | TC-003 | Navigate with swipe | Swipe left and right on calendar | Visible month changes. |
 | TC-004 | Select day | Click any day cell | Sidebar title and selected day label update. |

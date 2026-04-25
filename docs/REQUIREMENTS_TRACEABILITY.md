@@ -23,6 +23,13 @@ This document maps requested capabilities to implementation locations and verifi
 | REQ-017 | Persist data across refreshes. | Complete | `taskcalendar.html`: `localStorage` key `task-calendar-v2` | Add item, refresh page, confirm item remains. |
 | REQ-018 | Support responsive mobile layout. | Complete | `taskcalendar.html`: CSS media queries and mobile dock | Resize viewport or test on mobile width. |
 | REQ-019 | Document the application for traceability. | Complete | `docs/` folder and `README.md` | Review documentation index and traceability matrix. |
+| REQ-020 | Keep the app deployable on GitHub Pages. | In progress | `vite.config.js`, `.github/workflows/pages.yml`, `docs/HLD_GITHUB_PAGES.md`, `docs/LLD_GITHUB_PAGES.md` | Run `npm run build` and verify Pages workflow uploads `dist/`. |
+| REQ-021 | Support multiple planner profiles. | Planned | Storage adapter design in `docs/LLD_GITHUB_PAGES.md` | Create, switch, export, and import profiles. |
+| REQ-022 | Support JSON import and export. | Planned | Import/export adapter design in `docs/LLD_GITHUB_PAGES.md` | Export profile JSON, import it into a clean browser profile. |
+| REQ-023 | Optionally sync profile JSON to GitHub. | Planned | GitHub adapter design in `docs/LLD_GITHUB_PAGES.md` | Pull and push profile JSON through GitHub API with conflict detection. |
+| REQ-024 | Avoid hard-coded GitHub secrets. | Planned | Security model in `docs/HLD_GITHUB_PAGES.md` | Inspect source and verify no token is committed. |
+| REQ-025 | Migrate to Vite and React. | Complete | `package.json`, `vite.config.js`, `src/` | Run `npm run build`. |
+| REQ-026 | Introduce storage adapter boundary. | Complete | `src/storage/` | Verify app persistence goes through `storage` adapter import. |
 
 ## Traceability Notes
 
