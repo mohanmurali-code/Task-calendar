@@ -1,8 +1,9 @@
 import { useMemo } from "react";
+import ModernCard from "./ModernCard.jsx";
 
 const PRIORITY_ORDER = { high: 0, normal: 1, low: 2 };
 
-export default function ItemFeed({ items, mode, tags, onDelete, onToggleDone, onConvert, onStartPomodoro, onTagFilter }) {
+export default function ItemFeed({ items, mode, tags, allItems = items, routines = [], onDelete, onToggleDone, onConvert, onStartPomodoro, onOpenLinkDialog }) {
   const sorted = useMemo(() => {
     return [...items].sort((a, b) => {
       if (mode === "tasks") {
@@ -21,48 +22,20 @@ export default function ItemFeed({ items, mode, tags, onDelete, onToggleDone, on
   }
 
   return (
-    <div className="feed">
+    <div className="feed" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       {sorted.map((item) => (
-        <div key={item.id} className={`item-card ${item.isPinned ? "pinned" : ""} priority-${item.priority || "normal"} ${item.type === "task" && item.done ? "task-done" : ""}`} style={item.color && item.type === "note" ? { borderTopColor: item.color } : {}}>
-          <div className="priority-bar" />
-          
-          {item.type === "task" ? (
-            <button className={`check ${item.done ? "done" : ""}`} type="button" onClick={() => onToggleDone(item.id)} />
-          ) : (
-            <span className="note-icon">{item.isPinned ? "📌" : "📝"}</span>
-          )}
-
-          <div className="item-body">
-            <div className={`item-title ${item.type === "task" && item.done ? "done" : ""}`}>
-              {item.title || (item.type === "note" ? "Untitled Note" : "")}
-            </div>
-            {item.text && <div className="note-text muted" style={{ fontSize: 13, marginTop: 4 }}>{item.text}</div>}
-            
-            <div className="meta">
-              {item.time && <span className="chip">⏰ {item.time}</span>}
-              {(item.tags || []).map((tid) => {
-                const tag = tags.find((t) => t.id === tid);
-                if (!tag) return null;
-                return (
-                  <span key={tid} className="chip tag-chip" style={{ color: tag.color, borderColor: tag.color + "55", background: tag.color + "18" }} onClick={() => onTagFilter && onTagFilter(tid)}>
-                    # {tag.label}
-                  </span>
-                );
-              })}
-              {item.pomodoroCount > 0 && <span className="chip pomo-badge">🍅×{item.pomodoroCount}</span>}
-            </div>
-          </div>
-
-          <div className="item-actions" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {item.type === "task" && onStartPomodoro && (
-              <button className="icon-action-btn" title="Start Pomodoro" type="button" onClick={() => onStartPomodoro(item)}>🍅</button>
-            )}
-            {onConvert && (
-              <button className="icon-action-btn" title={`Convert to ${item.type === "task" ? "Note" : "Task"}`} type="button" onClick={() => onConvert(item.id)}>↔</button>
-            )}
-            <button className="delete" type="button" onClick={() => onDelete(item.id)}>✕</button>
-          </div>
-        </div>
+        <ModernCard 
+          key={item.id} 
+          item={item} 
+          tags={tags} 
+          items={allItems} 
+          routines={routines} 
+          onToggleDone={onToggleDone} 
+          onDelete={onDelete} 
+          onConvert={onConvert} 
+          onStartPomodoro={onStartPomodoro}
+          onOpenLinkDialog={onOpenLinkDialog}
+        />
       ))}
     </div>
   );

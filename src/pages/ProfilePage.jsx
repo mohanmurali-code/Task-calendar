@@ -6,13 +6,17 @@ const PRESET_COLORS = ["#7c4dff","#f45d8f","#ff9d47","#1fa97a","#2196f3","#e91e6
 export default function ProfilePage({ profile, items, routines, tags, onProfileChange, onTagsChange, onClearAll }) {
   const [name, setName] = useState(profile.name || "");
   const [color, setColor] = useState(profile.color || "#7c4dff");
+  const [profileTags, setProfileTags] = useState(profile.tags || []);
   const [confirmClear, setConfirmClear] = useState(false);
   const [showTagMgr, setShowTagMgr] = useState(false);
 
   function getInitials(n) {
     return n.trim() ? n.trim().split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) : "ME";
   }
-  function save() { onProfileChange({ name, color, initials: getInitials(name) }); }
+  function save() { onProfileChange({ ...profile, name, color, initials: getInitials(name), tags: profileTags }); }
+  function toggleProfileTag(id) {
+    setProfileTags((current) => current.includes(id) ? current.filter((tagId) => tagId !== id) : [...current, id]);
+  }
 
   const taskCount = items.filter((i) => i.type === "task").length;
   const doneCount = items.filter((i) => i.type === "task" && i.done).length;
@@ -62,9 +66,14 @@ export default function ProfilePage({ profile, items, routines, tags, onProfileC
         <div className="tag-filter-row" style={{ marginTop: 10 }}>
           {tags.length === 0 && <p className="muted">No tags yet.</p>}
           {tags.map((tag) => (
-            <span key={tag.id} className="chip tag-chip" style={{ color: tag.color, borderColor: tag.color+"55", background: tag.color+"18" }}># {tag.label}</span>
+            <button key={tag.id} type="button" className={`tag-pick-btn ${profileTags.includes(tag.id) ? "active" : ""}`}
+              style={profileTags.includes(tag.id) ? { background: tag.color, color: "#fff", borderColor: tag.color } : { color: tag.color, borderColor: tag.color+"55", background: tag.color+"18" }}
+              onClick={() => toggleProfileTag(tag.id)}>
+              # {tag.label}
+            </button>
           ))}
         </div>
+        <p className="muted" style={{ marginTop: 8 }}>Selected tags are attached to your profile/preferences.</p>
       </div>
 
       <div className="profile-section danger-zone">

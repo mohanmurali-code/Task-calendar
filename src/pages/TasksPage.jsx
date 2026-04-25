@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 import { formatDateKey } from "../utils/date.js";
+import ModernCard from "../components/ModernCard.jsx";
 
 const PRIORITY_ORDER = { high: 0, normal: 1, low: 2 };
 
-export default function TasksPage({ items, tags, onToggleDone, onDelete, onConvert, onUpdateItem, onStartPomodoro }) {
+export default function TasksPage({ items, tags, routines = [], onToggleDone, onDelete, onConvert, onUpdateItem, onStartPomodoro, onOpenLinkDialog }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -16,9 +17,11 @@ export default function TasksPage({ items, tags, onToggleDone, onDelete, onConve
   const tasks = useMemo(() => {
     let result = items.filter((i) => i.type === "task");
     const q = search.trim().toLowerCase();
-    if (q) result = result.filter((i) => `${i.title} ${i.text}`.toLowerCase().includes(q));
-    if (statusFilter === "open") result = result.filter((i) => !i.done);
-    if (statusFilter === "done") result = result.filter((i) => i.done);
+    if (q) result = result.filter((i) => `${i.title} ${i.description || i.text}`.toLowerCase().includes(q));
+    if (statusFilter === "open") result = result.filter((i) => !i.done && (i.status || "open") === "open");
+    if (statusFilter === "done") result = result.filter((i) => i.done || i.status === "completed");
+    if (statusFilter === "in_progress") result = result.filter((i) => i.status === "in_progress");
+    if (statusFilter === "blocked") result = result.filter((i) => i.status === "blocked");
     if (priorityFilter !== "all") result = result.filter((i) => i.priority === priorityFilter);
     if (tagFilter !== "all") result = result.filter((i) => (i.tags || []).includes(tagFilter));
     return result;
@@ -70,6 +73,8 @@ export default function TasksPage({ items, tags, onToggleDone, onDelete, onConve
         <select className="select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">All Status</option>
           <option value="open">Open</option>
+          <option value="in_progress">In progress</option>
+          <option value="blocked">Blocked</option>
           <option value="done">Done</option>
         </select>
         <select className="select" value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
@@ -107,38 +112,22 @@ export default function TasksPage({ items, tags, onToggleDone, onDelete, onConve
           <div key={group} className="task-group">
             <div className="group-label">{group} <span className="muted">({groupTasks.length})</span></div>
             {groupTasks.map((task) => (
-              <div key={task.id} className={`task-row priority-${task.priority} ${task.done ? "task-done" : ""} ${selected.has(task.id) ? "task-selected" : ""}`}>
-                <input type="checkbox" checked={selected.has(task.id)} onChange={() => toggleSelect(task.id)} className="task-checkbox" />
-                <div className="priority-bar" />
-                <button className={`check ${task.done ? "done" : ""}`} type="button" onClick={() => onToggleDone(task.id)} />
-                <div className="task-row-body" style={{ flex: 1, minWidth: 0 }}>
-                  {editingId === task.id ? (
-                    <input
-                      className="field"
-                      autoFocus
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      onBlur={() => saveEdit(task.id)}
-                      onKeyDown={(e) => e.key === "Enter" && saveEdit(task.id)}
-                      style={{ padding: "4px 8px", minHeight: 0 }}
-                    />
-                  ) : (
-                    <div className={`item-title ${task.done ? "done" : ""}`} onDoubleClick={() => startEdit(task)}>{task.title}</div>
-                  )}
-                  <div className="meta">
-                    {task.time && <span className="chip">⏰ {task.time}</span>}
-                    <span className="chip">{task.date}</span>
-                    {(task.tags || []).map((tid) => {
-                      const tag = tags.find((t) => t.id === tid);
-                      return tag ? <span key={tid} className="chip tag-chip" style={{ color: tag.color, borderColor: tag.color + "55" }}># {tag.label}</span> : null;
-                    })}
-                    {task.pomodoroCount > 0 && <span className="chip pomo-badge">🍅×{task.pomodoroCount}</span>}
-                  </div>
+              <div key={task.id} style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "16px" }}>
+                <div style={{ marginTop: "16px" }}>
+                  <input type="checkbox" checked={selected.has(task.id)} onChange={() => toggleSelect(task.id)} className="task-checkbox" />
                 </div>
-                <div className="task-row-actions">
-                  <button className="icon-action-btn" title="Start Pomodoro" type="button" onClick={() => onStartPomodoro(task)}>🍅</button>
-                  <button className="icon-action-btn" title="Convert to Note" type="button" onClick={() => onConvert(task.id)}>↔</button>
-                  <button className="icon-action-btn danger" title="Delete" type="button" onClick={() => onDelete(task.id)}>✕</button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <ModernCard 
+                    item={task} 
+                    tags={tags} 
+                    items={items} 
+                    routines={routines} 
+                    onToggleDone={onToggleDone} 
+                    onDelete={onDelete} 
+                    onConvert={onConvert} 
+                    onStartPomodoro={onStartPomodoro}
+                    onOpenLinkDialog={onOpenLinkDialog}
+                  />
                 </div>
               </div>
             ))}

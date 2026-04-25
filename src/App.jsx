@@ -10,6 +10,8 @@ import TasksPage from "./pages/TasksPage.jsx";
 import NotesPage from "./pages/NotesPage.jsx";
 import RoutinesPage from "./pages/RoutinesPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import LinkDialog from "./components/LinkDialog.jsx";
+import { createDraftDefaults, normalizeLinks } from "./utils/entities.js";
 
 const todayKey = toDateKey(new Date());
 
@@ -37,11 +39,14 @@ export default function App() {
   const [taskFilter, setTaskFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState(null);
 
-  const [taskDraft, setTaskDraft] = useState({ title:"", time:"", priority:"normal", text:"", tags:[] });
-  const [noteDraft, setNoteDraft] = useState({ title:"", text:"", isPinned:false, tags:[] });
+  const [taskDraft, setTaskDraft] = useState(() => createDraftDefaults({ dueDate: todayKey, startDate: todayKey }));
+  const [noteDraft, setNoteDraft] = useState(() => createDraftDefaults({ dueDate: todayKey, startDate: todayKey, isPinned:false }));
 
   // Pomodoro
   const [pomo, setPomo] = useState(INITIAL_POMO);
+
+  // Linking
+  const [linkingItem, setLinkingItem] = useState(null);
 
   // Long-press agenda opener
   window.__openAgenda = () => setActivePage("agenda");
@@ -97,16 +102,80 @@ export default function App() {
     const ts = Date.now();
     if (mode==="tasks") {
       if (!taskDraft.title.trim()) return;
-      persist([...items, { id:createItemId(), date:selectedDate, type:"task", title:taskDraft.title.trim(), text:taskDraft.text.trim(), time:overrideTime||taskDraft.time, priority:taskDraft.priority, tags:taskDraft.tags||[], done:false, isPinned:false, isRoutine:false, routineId:null, pomodoroCount:0, color:null, createdAt:ts, updatedAt:ts }]);
-      setTaskDraft({ title:"", time:"", priority:"normal", text:"", tags:[] });
+      const done = taskDraft.status === "completed";
+      persist([...items, {
+        id:createItemId(),
+        date:selectedDate,
+        type:"task",
+        title:taskDraft.title.trim(),
+        description:(taskDraft.description ?? taskDraft.text ?? "").trim(),
+        text:(taskDraft.description ?? taskDraft.text ?? "").trim(),
+        time:overrideTime||taskDraft.startTime||taskDraft.time,
+        priority:taskDraft.priority || "normal",
+        status:taskDraft.status || "open",
+        dueDate:taskDraft.dueDate || selectedDate,
+        reminderTime:taskDraft.reminderTime || "",
+        startDate:taskDraft.startDate || selectedDate,
+        startTime:overrideTime||taskDraft.startTime||taskDraft.time||"",
+        completionTime:done ? new Date(ts).toISOString() : "",
+        durationMinutes:taskDraft.durationMinutes || "",
+        parentId:taskDraft.parentId || "",
+        links:normalizeLinks(taskDraft.links),
+        timeTracking:{ totalSeconds:0, lastStartedAt:null },
+        tags:taskDraft.tags||[],
+        done,
+        isPinned:false,
+        isRoutine:false,
+        routineId:null,
+        pomodoroCount:0,
+        color:null,
+        createdAt:ts,
+        updatedAt:ts,
+      }]);
+      setTaskDraft(createDraftDefaults({ dueDate:selectedDate, startDate:selectedDate }));
     } else {
-      if (!noteDraft.text?.trim()) return;
-      persist([...items, { id:createItemId(), date:selectedDate, type:"note", title:noteDraft.title?.trim()||"", text:noteDraft.text.trim(), time:"", priority:"normal", tags:noteDraft.tags||[], done:false, isPinned:noteDraft.isPinned||false, isRoutine:false, routineId:null, pomodoroCount:0, color:null, createdAt:ts, updatedAt:ts }]);
-      setNoteDraft({ title:"", text:"", isPinned:false, tags:[] });
+      if (!noteDraft.title?.trim()) return;
+      const done = noteDraft.status === "completed";
+      persist([...items, {
+        id:createItemId(),
+        date:selectedDate,
+        type:"note",
+        title:noteDraft.title.trim(),
+        description:(noteDraft.description ?? noteDraft.text ?? "").trim(),
+        text:(noteDraft.description ?? noteDraft.text ?? "").trim(),
+        time:noteDraft.startTime || noteDraft.time || "",
+        priority:noteDraft.priority || "normal",
+        status:noteDraft.status || "open",
+        dueDate:noteDraft.dueDate || selectedDate,
+        reminderTime:noteDraft.reminderTime || "",
+        startDate:noteDraft.startDate || selectedDate,
+        startTime:noteDraft.startTime || noteDraft.time || "",
+        completionTime:done ? new Date(ts).toISOString() : "",
+        durationMinutes:noteDraft.durationMinutes || "",
+        parentId:noteDraft.parentId || "",
+        links:normalizeLinks(noteDraft.links),
+        timeTracking:{ totalSeconds:0, lastStartedAt:null },
+        tags:noteDraft.tags||[],
+        done,
+        isPinned:noteDraft.isPinned||false,
+        isRoutine:false,
+        routineId:null,
+        pomodoroCount:0,
+        color:null,
+        createdAt:ts,
+        updatedAt:ts,
+      }]);
+      setNoteDraft(createDraftDefaults({ dueDate:selectedDate, startDate:selectedDate, isPinned:false }));
     }
   }
 
-  function toggleDone(id) { persist(items.map((i) => i.id===id ? { ...i, done:!i.done, updatedAt:Date.now() } : i)); }
+  function toggleDone(id) {
+    persist(items.map((i) => {
+      if (i.id !== id) return i;
+      const done = !i.done;
+      return { ...i, done, status: done ? "completed" : "open", completionTime: done ? new Date().toISOString() : "", updatedAt:Date.now() };
+    }));
+  }
   function deleteItem(id) { persist(items.filter((i) => i.id!==id)); }
   function clearDone() { persist(items.filter((i) => !(i.date===selectedDate && i.type==="task" && i.done))); }
 
@@ -120,6 +189,28 @@ export default function App() {
     if (!item) return;
     const newType = item.type==="task" ? "note" : "task";
     persist(items.map((i) => i.id===id ? { ...i, type:newType, updatedAt:Date.now() } : i));
+  }
+
+  // ── Linking ───────────────────────────────────────────
+  function handleLink(targetId) {
+    if (!linkingItem) return;
+    
+    // Determine if linkingItem or targetId is a routine
+    const isRoutine1 = linkingItem.type === "routine";
+    const isRoutine2 = routines.some(r => r.id === targetId);
+    
+    if (isRoutine1) {
+      persistRoutines(routines.map(r => r.id === linkingItem.id ? { ...r, links: [...new Set([...(r.links||[]), targetId])], updatedAt: Date.now() } : r));
+    } else {
+      persist(items.map(i => i.id === linkingItem.id ? { ...i, links: [...new Set([...(i.links||[]), targetId])], updatedAt: Date.now() } : i));
+    }
+
+    if (isRoutine2) {
+      persistRoutines(routines.map(r => r.id === targetId ? { ...r, links: [...new Set([...(r.links||[]), linkingItem.id])], updatedAt: Date.now() } : r));
+    } else {
+      persist(items.map(i => i.id === targetId ? { ...i, links: [...new Set([...(i.links||[]), linkingItem.id])], updatedAt: Date.now() } : i));
+    }
+    setLinkingItem(null);
   }
 
   // ── Pomodoro ──────────────────────────────────────────
@@ -164,7 +255,7 @@ export default function App() {
   function clearAll() {
     storage.clearAll();
     setItems([]); setTags([]); setRoutines([]);
-    setProfile({ name:"", initials:"ME", color:"#7c4dff" });
+    setProfile({ name:"", initials:"ME", color:"#7c4dff", tags:[] });
   }
 
   // ── Render ────────────────────────────────────────────
@@ -241,9 +332,9 @@ export default function App() {
                   <option value="all">All</option><option value="open">Open</option><option value="done">Done</option><option value="high">High</option>
                 </select>
               </div>
-              <ItemFeed items={filteredItems} mode={mode} tags={tags} onDelete={deleteItem} onToggleDone={toggleDone} onConvert={convertItem} onStartPomodoro={startPomodoro} onTagFilter={(id) => setTagFilter(tagFilter===id?null:id)} />
+              <ItemFeed items={filteredItems} mode={mode} tags={tags} allItems={items} routines={routines} onDelete={deleteItem} onToggleDone={toggleDone} onConvert={convertItem} onStartPomodoro={startPomodoro} onTagFilter={(id) => setTagFilter(tagFilter===id?null:id)} onOpenLinkDialog={setLinkingItem} />
             </section>
-            <Composer mode={mode} noteDraft={noteDraft} taskDraft={taskDraft} tags={tags} onAdd={addItem} onNoteChange={setNoteDraft} onTaskChange={setTaskDraft} />
+            <Composer mode={mode} noteDraft={noteDraft} taskDraft={taskDraft} tags={tags} items={items} routines={routines} onAdd={addItem} onNoteChange={setNoteDraft} onTaskChange={setTaskDraft} />
           </aside>
         </section>
       )}
@@ -253,11 +344,11 @@ export default function App() {
       )}
 
       {activePage==="tasks" && (
-        <TasksPage items={items} tags={tags} onToggleDone={toggleDone} onDelete={deleteItem} onConvert={convertItem} onUpdateItem={updateItem} onStartPomodoro={startPomodoro} />
+        <TasksPage items={items} tags={tags} routines={routines} onToggleDone={toggleDone} onDelete={deleteItem} onConvert={convertItem} onUpdateItem={updateItem} onStartPomodoro={startPomodoro} onOpenLinkDialog={setLinkingItem} />
       )}
 
       {activePage==="notes" && (
-        <NotesPage items={items} tags={tags} onDelete={deleteItem} onUpdateItem={updateItem} onConvert={convertItem} />
+        <NotesPage items={items} tags={tags} routines={routines} onDelete={deleteItem} onUpdateItem={updateItem} onConvert={convertItem} />
       )}
 
       {activePage==="routines" && (
@@ -287,6 +378,9 @@ export default function App() {
 
       {/* Pomodoro overlay */}
       {pomo.activeTaskId && <PomodoroTimer state={pomo} onTick={pomoTick} onSkip={pomoSkip} onStop={pomoStop} />}
+
+      {/* Link Dialog */}
+      {linkingItem && <LinkDialog items={items} routines={routines} currentItem={linkingItem} onClose={() => setLinkingItem(null)} onLink={handleLink} />}
     </main>
   );
 }

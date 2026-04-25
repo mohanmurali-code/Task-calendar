@@ -41,9 +41,18 @@ Tasks and notes are stored together in `state.items`.
   "date": "YYYY-MM-DD",
   "type": "task",
   "title": "Pay invoice",
-  "text": "Optional details",
-  "time": "09:30",
+  "description": "Optional details",
   "priority": "normal",
+  "status": "open",
+  "dueDate": "YYYY-MM-DD",
+  "reminderTime": "09:00",
+  "startDate": "YYYY-MM-DD",
+  "startTime": "09:30",
+  "durationMinutes": "30",
+  "completionTime": "",
+  "parentId": "",
+  "tags": ["tag-id"],
+  "links": [{ "kind": "note", "id": "uuid" }],
   "done": false,
   "createdAt": 1777093200000
 }
@@ -57,13 +66,32 @@ Tasks and notes are stored together in `state.items`.
   "date": "YYYY-MM-DD",
   "type": "note",
   "title": "",
-  "text": "Meeting notes",
-  "time": "",
+  "description": "Meeting notes",
   "priority": "normal",
+  "status": "open",
+  "dueDate": "YYYY-MM-DD",
+  "reminderTime": "",
+  "startDate": "YYYY-MM-DD",
+  "startTime": "",
+  "durationMinutes": "",
+  "completionTime": "",
+  "parentId": "",
+  "tags": ["tag-id"],
+  "links": [{ "kind": "task", "id": "uuid" }],
   "done": false,
   "createdAt": 1777093200000
 }
 ```
+
+### Routine
+
+Routines use the same common fields as tasks and notes, plus recurrence fields such as `daysOfWeek`. Routine links use:
+
+```json
+{ "kind": "routine", "id": "routine-id" }
+```
+
+Tasks, notes, and routines can link to each other through the shared `links` array.
 
 ## Persistence
 

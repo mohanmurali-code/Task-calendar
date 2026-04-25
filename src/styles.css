@@ -345,6 +345,13 @@ h1 {
   box-shadow: none;
 }
 
+.composer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .pin-toggle {
   display: flex;
   align-items: center;
@@ -372,6 +379,44 @@ h1 {
   transition: all .15s ease;
 }
 
+.link-picker {
+  display: grid;
+  gap: 6px;
+  max-height: 160px;
+  overflow: auto;
+}
+.link-pick-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-align: left;
+}
+.link-pick-btn.active {
+  border-color: var(--violet);
+  background: rgba(124,77,255,.1);
+}
+.link-kind {
+  flex: 0 0 auto;
+  padding: 2px 7px;
+  color: var(--violet);
+  background: rgba(124,77,255,.12);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.link-chip {
+  color: var(--violet);
+  border-color: rgba(124,77,255,.25);
+  background: rgba(124,77,255,.08);
+}
+
 /* ── Fields ──────────────────────────────────────────── */
 .field, .textarea, .select {
   width: 100%;
@@ -391,6 +436,28 @@ h1 {
 }
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.field-label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.field-block {
+  display: grid;
+  gap: 8px;
+}
+.field-title {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.field-help {
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+}
 .search-row {
   display: grid;
   grid-template-columns: minmax(0,1fr) 110px;
@@ -1354,3 +1421,229 @@ h1 {
 @media (max-width: 920px) {
   .desktop-nav { display: none; }
 }
+
+/* ── Phase 3: Modern Cards & Toasts & Linking ────────────────────────────── */
+
+/* Toast System */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+.toast {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--line);
+  padding: 12px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  font-weight: 600;
+  font-size: 14px;
+  animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: auto;
+}
+.toast-success { border-left: 4px solid var(--green); }
+.toast-error { border-left: 4px solid #f44336; }
+.toast-info { border-left: 4px solid var(--blue); }
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Modern Card (Instagram style) */
+.modern-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+}
+.modern-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+  border-color: rgba(124,77,255,0.3);
+}
+.modern-card.is-done {
+  opacity: 0.6;
+}
+.modern-card.is-done:hover { opacity: 0.8; }
+
+.modern-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.modern-card-header-main {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.modern-check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--soft);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s;
+}
+.modern-check:hover {
+  border-color: var(--violet);
+  background: rgba(124,77,255,0.05);
+}
+.modern-check.checked {
+  background: var(--violet);
+  border-color: var(--violet);
+}
+.modern-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.modern-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.modern-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.modern-card.is-done .modern-title {
+  text-decoration: line-through;
+}
+.modern-meta-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.modern-meta-pill {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.modern-meta-pill .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.modern-card-body {
+  margin-top: 12px;
+  padding-left: 44px; /* Align with title */
+}
+.modern-description {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+.modern-description.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.modern-expanded-details {
+  margin-top: 16px;
+  animation: fadeIn 0.3s;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modern-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.modern-tag {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid;
+}
+
+.modern-links {
+  background: var(--soft);
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+}
+.modern-links-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.modern-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.modern-link-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.modern-card-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 44px;
+}
+.modern-actions-left, .modern-actions-right {
+  display: flex;
+  gap: 8px;
+}
+.modern-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--soft);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.modern-btn:hover { background: var(--line); }
+.modern-btn.danger { color: #f44336; }
+.modern-btn.danger:hover { background: rgba(244,67,54,0.1); }

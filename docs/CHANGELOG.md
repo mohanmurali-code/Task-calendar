@@ -4,6 +4,9 @@
 
 ### Added
 
+- Extended task, note, and routine records with description, priority, status, due date, reminder time, start date, start time, completion time, duration, parent task, tags, and links.
+- Added cross-link support between tasks, notes, and routines.
+- Added profile-level tag preferences.
 - Instagram-inspired planner UI with rounded cards, gradient accents, avatar mark, and responsive mobile dock.
 - Month navigation by buttons and swipe gestures.
 - Day selection.

@@ -1,6 +1,10 @@
 import { useState, useMemo } from "react";
+import EntityLinksPicker from "../components/EntityLinksPicker.jsx";
+import LinkedChips from "../components/LinkedChips.jsx";
+import { PRIORITY_OPTIONS, STATUS_OPTIONS } from "../utils/entities.js";
+import ModernCard from "../components/ModernCard.jsx";
 
-export default function NotesPage({ items, tags, onDelete, onUpdateItem, onConvert }) {
+export default function NotesPage({ items, tags, routines = [], onDelete, onUpdateItem, onConvert, onOpenLinkDialog }) {
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState("all");
   const [layout, setLayout] = useState("grid"); // "grid" | "list"
@@ -10,18 +14,36 @@ export default function NotesPage({ items, tags, onDelete, onUpdateItem, onConve
   const notes = useMemo(() => {
     let result = items.filter((i) => i.type === "note");
     const q = search.trim().toLowerCase();
-    if (q) result = result.filter((i) => `${i.title} ${i.text}`.toLowerCase().includes(q));
+    if (q) result = result.filter((i) => `${i.title} ${i.description || i.text}`.toLowerCase().includes(q));
     if (tagFilter !== "all") result = result.filter((i) => (i.tags || []).includes(tagFilter));
     return [...result].sort((a, b) => Number(b.isPinned) - Number(a.isPinned) || b.createdAt - a.createdAt);
   }, [items, search, tagFilter]);
 
   function openNote(note) {
     setExpandedId(note.id);
-    setEditDraft({ title: note.title, text: note.text, isPinned: note.isPinned, tags: note.tags || [], color: note.color });
+    setEditDraft({
+      title: note.title,
+      description: note.description || note.text || "",
+      text: note.description || note.text || "",
+      priority: note.priority || "normal",
+      status: note.status || "open",
+      dueDate: note.dueDate || "",
+      reminderTime: note.reminderTime || "",
+      startDate: note.startDate || "",
+      startTime: note.startTime || note.time || "",
+      durationMinutes: note.durationMinutes || "",
+      completionTime: note.completionTime || "",
+      parentId: note.parentId || "",
+      links: note.links || [],
+      isPinned: note.isPinned,
+      tags: note.tags || [],
+      color: note.color,
+    });
   }
 
   function saveNote() {
-    onUpdateItem(expandedId, { ...editDraft, updatedAt: Date.now() });
+    const done = editDraft.status === "completed";
+    onUpdateItem(expandedId, { ...editDraft, done, completionTime: done ? (editDraft.completionTime || new Date().toISOString()) : "", updatedAt: Date.now() });
     setExpandedId(null);
     setEditDraft(null);
   }
@@ -59,29 +81,17 @@ export default function NotesPage({ items, tags, onDelete, onUpdateItem, onConve
 
       <div className={layout === "grid" ? "notes-grid" : "notes-list"}>
         {notes.map((note) => (
-          <div
+          <ModernCard
             key={note.id}
-            className={`note-card-full ${note.isPinned ? "pinned" : ""}`}
-            style={note.color ? { borderTopColor: note.color } : {}}
-            onClick={() => openNote(note)}
-          >
-            <div className="note-card-header">
-              <div className="item-title">{note.title || "Untitled Note"}</div>
-              <div className="note-card-actions" onClick={(e) => e.stopPropagation()}>
-                {note.isPinned && <span title="Pinned">📌</span>}
-                <button className="icon-action-btn" title="Convert to Task" type="button" onClick={() => onConvert(note.id)}>↔</button>
-                <button className="icon-action-btn danger" title="Delete" type="button" onClick={() => onDelete(note.id)}>✕</button>
-              </div>
-            </div>
-            <p className="muted note-preview">{note.text}</p>
-            <div className="meta">
-              <span className="chip">{new Date(note.createdAt).toLocaleDateString("en", { month: "short", day: "numeric" })}</span>
-              {(note.tags || []).map((tid) => {
-                const tag = tags.find((t) => t.id === tid);
-                return tag ? <span key={tid} className="chip tag-chip" style={{ color: tag.color, borderColor: tag.color + "55" }}># {tag.label}</span> : null;
-              })}
-            </div>
-          </div>
+            item={note}
+            tags={tags}
+            items={items}
+            routines={routines}
+            onDelete={onDelete}
+            onConvert={onConvert}
+            onOpenLinkDialog={onOpenLinkDialog}
+            onEdit={() => openNote(note)}
+          />
         ))}
       </div>
 
@@ -97,7 +107,33 @@ export default function NotesPage({ items, tags, onDelete, onUpdateItem, onConve
               </div>
             </div>
             <input className="field" placeholder="Title" value={editDraft.title} onChange={(e) => setEditDraft((d) => ({ ...d, title: e.target.value }))} />
-            <textarea className="textarea note-editor-body" placeholder="Note content…" value={editDraft.text} onChange={(e) => setEditDraft((d) => ({ ...d, text: e.target.value }))} />
+            <textarea className="textarea note-editor-body" placeholder="Note content..." value={editDraft.description ?? editDraft.text} onChange={(e) => setEditDraft((d) => ({ ...d, description: e.target.value, text: e.target.value }))} />
+            <div className="form-row">
+              <select className="select" value={editDraft.priority || "normal"} onChange={(e) => setEditDraft((d) => ({ ...d, priority: e.target.value }))}>
+                {PRIORITY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label} priority</option>)}
+              </select>
+              <select className="select" value={editDraft.status || "open"} onChange={(e) => setEditDraft((d) => ({ ...d, status: e.target.value }))}>
+                {STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </div>
+            <div className="form-row">
+              <label className="field-label">Due date<input className="field" type="date" value={editDraft.dueDate || ""} onChange={(e) => setEditDraft((d) => ({ ...d, dueDate: e.target.value }))} /></label>
+              <label className="field-label">Reminder<input className="field" type="time" value={editDraft.reminderTime || ""} onChange={(e) => setEditDraft((d) => ({ ...d, reminderTime: e.target.value }))} /></label>
+            </div>
+            <div className="form-row">
+              <label className="field-label">Start date<input className="field" type="date" value={editDraft.startDate || ""} onChange={(e) => setEditDraft((d) => ({ ...d, startDate: e.target.value }))} /></label>
+              <label className="field-label">Start time<input className="field" type="time" value={editDraft.startTime || ""} onChange={(e) => setEditDraft((d) => ({ ...d, startTime: e.target.value, time: e.target.value }))} /></label>
+            </div>
+            <div className="form-row">
+              <label className="field-label">Duration minutes<input className="field" type="number" min="0" value={editDraft.durationMinutes || ""} onChange={(e) => setEditDraft((d) => ({ ...d, durationMinutes: e.target.value }))} /></label>
+              <label className="field-label">
+                Parent task
+                <select className="select" value={editDraft.parentId || ""} onChange={(e) => setEditDraft((d) => ({ ...d, parentId: e.target.value }))}>
+                  <option value="">None</option>
+                  {items.filter((item) => item.type === "task").map((task) => <option key={task.id} value={task.id}>{task.title || "Untitled task"}</option>)}
+                </select>
+              </label>
+            </div>
             <label className="pin-toggle">
               <input type="checkbox" checked={editDraft.isPinned} onChange={(e) => setEditDraft((d) => ({ ...d, isPinned: e.target.checked }))} />
               📌 Pinned
@@ -113,6 +149,10 @@ export default function NotesPage({ items, tags, onDelete, onUpdateItem, onConve
                 ))}
               </div>
             )}
+            <div className="field-block">
+              <p className="field-title">Linked work</p>
+              <EntityLinksPicker items={items} routines={routines} links={editDraft.links || []} currentEntity={expandedNote} onChange={(links) => setEditDraft((d) => ({ ...d, links }))} />
+            </div>
             <button className="pill-btn primary" style={{ width: "100%" }} type="button" onClick={saveNote}>Save Note</button>
           </div>
         </div>

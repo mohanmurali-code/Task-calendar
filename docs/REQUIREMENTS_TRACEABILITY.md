@@ -30,6 +30,9 @@ This document maps requested capabilities to implementation locations and verifi
 | REQ-024 | Avoid hard-coded GitHub secrets. | Planned | Security model in `docs/HLD_GITHUB_PAGES.md` | Inspect source and verify no token is committed. |
 | REQ-025 | Migrate to Vite and React. | Complete | `package.json`, `vite.config.js`, `src/` | Run `npm run build`. |
 | REQ-026 | Introduce storage adapter boundary. | Complete | `src/storage/` | Verify app persistence goes through `storage` adapter import. |
+| REQ-027 | Support rich fields for tasks, notes, and routines. | In progress | `src/components/Composer.jsx`, `src/pages/RoutinesPage.jsx`, `src/storage/localStorageAdapter.js` | Create each entity type and verify all metadata persists. |
+| REQ-028 | Link tasks, notes, and routines to each other. | In progress | `src/components/EntityLinksPicker.jsx`, `src/components/LinkedChips.jsx` | Create entities, link them, and verify link chips render. |
+| REQ-029 | Support profile-level tag preferences. | Complete | `src/pages/ProfilePage.jsx` | Select profile tags and save profile. |
 
 ## Traceability Notes
 

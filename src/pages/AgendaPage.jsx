@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { toDateKey, fromDateKey, weekDays, shortDayLabel, buildMonthDays, monthLabel } from "../utils/date.js";
+import ModernCard from "../components/ModernCard.jsx";
 
-const HOURS = Array.from({ length: 16 }, (_, i) => i + 6); // 6 AM–9 PM
+const HOURS = Array.from({ length: 18 }, (_, i) => i + 5); // 5 AM–10 PM
 
 function formatHour(h) {
   const ampm = h < 12 ? "AM" : "PM";
@@ -18,6 +19,14 @@ export default function AgendaPage({ items, tags, routines, selectedDate, onSele
     const d = fromDateKey(selectedDate);
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
+  
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every minute for the indicator
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const todayKey = toDateKey(new Date());
 
@@ -82,19 +91,48 @@ export default function AgendaPage({ items, tags, routines, selectedDate, onSele
           {unscheduled.length > 0 && (
             <div className="agenda-unscheduled">
               <div className="agenda-section-label">Unscheduled</div>
-              {unscheduled.map((item) => <AgendaCard key={item.id} item={item} tags={tags} onToggleDone={onToggleDone} onDelete={onDelete} />)}
+              {unscheduled.map((item) => (
+                <div key={item.id} style={{ marginBottom: 8 }}>
+                  <ModernCard item={item} tags={tags} items={items} routines={routines} onToggleDone={onToggleDone} onDelete={onDelete} />
+                </div>
+              ))}
             </div>
           )}
-          <div className="agenda-timeline">
+          <div className="agenda-timeline" style={{ position: "relative" }}>
+            {/* Current Time Indicator */}
+            {selectedDate === todayKey && (
+              <div 
+                className="current-time-line"
+                style={{
+                  position: "absolute",
+                  left: "60px",
+                  right: 0,
+                  top: `${Math.max(0, (currentTime.getHours() - HOURS[0]) * 80 + (currentTime.getMinutes() / 60) * 80)}px`,
+                  borderTop: "2px solid #f44336",
+                  zIndex: 10,
+                  pointerEvents: "none"
+                }}
+              >
+                <div style={{ position: "absolute", left: "-60px", top: "-10px", color: "#f44336", fontSize: "12px", fontWeight: "bold", background: "#fff", padding: "2px 4px", borderRadius: "4px" }}>
+                  {formatHour(currentTime.getHours()).split(' ')[0]}:{pad(currentTime.getMinutes())}
+                </div>
+                <div style={{ position: "absolute", left: 0, top: "-4px", width: "8px", height: "8px", borderRadius: "50%", background: "#f44336" }}></div>
+              </div>
+            )}
+
             {HOURS.map((h) => {
               const slotItems = itemsAtHour(h);
               const slotRoutines = routinesAtHour(h);
               return (
-                <div key={h} className="agenda-row">
+                <div key={h} className="agenda-row" style={{ minHeight: "80px" }}>
                   <div className="agenda-hour-label">{formatHour(h)}</div>
                   <div className="agenda-slots">
                     {slotRoutines.map((r) => <div key={r.id} className="agenda-routine-chip">🔁 {r.title}</div>)}
-                    {slotItems.map((item) => <AgendaCard key={item.id} item={item} tags={tags} onToggleDone={onToggleDone} onDelete={onDelete} />)}
+                    {slotItems.map((item) => (
+                      <div key={item.id} style={{ marginBottom: 8 }}>
+                        <ModernCard item={item} tags={tags} items={items} routines={routines} onToggleDone={onToggleDone} onDelete={onDelete} />
+                      </div>
+                    ))}
                     {slotItems.length===0 && slotRoutines.length===0 && (
                       <button className="agenda-add-slot" type="button" onClick={() => onAddAtTime && onAddAtTime(`${pad(h)}:00`)}>+ Add</button>
                     )}
@@ -173,17 +211,4 @@ export default function AgendaPage({ items, tags, routines, selectedDate, onSele
   );
 }
 
-function AgendaCard({ item, tags, onToggleDone, onDelete }) {
-  return (
-    <div className={`agenda-card priority-${item.priority||"normal"} ${item.done ? "done-card" : ""}`}>
-      <div className="priority-bar" />
-      {item.type==="task" && <button className={`check ${item.done ? "done" : ""}`} type="button" onClick={() => onToggleDone(item.id)} />}
-      {item.type==="note" && <span className="note-icon">📝</span>}
-      <div className="item-body" style={{ flex:1 }}>
-        <div className={`item-title ${item.done ? "done" : ""}`}>{item.title||"Note"}</div>
-        {item.text && <p className="muted" style={{ fontSize:12, margin:"2px 0 0" }}>{item.text.slice(0,80)}{item.text.length>80?"…":""}</p>}
-      </div>
-      <button className="delete" type="button" onClick={() => onDelete(item.id)}>✕</button>
-    </div>
-  );
-}
+
