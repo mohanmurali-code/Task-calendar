@@ -763,6 +763,18 @@ h1 {
   /* Agenda on mobile fills full width */
   .agenda-row { margin-left: 52px; }
 
+  .agenda-nav { 
+    flex-direction: column-reverse; 
+    align-items: flex-start; 
+    gap: 12px; 
+  }
+  .agenda-nav-label { 
+    text-align: left; 
+    font-size: 18px; 
+    width: 100%;
+    word-break: break-word;
+  }
+
   /* Mobile dock — 5 tabs */
   .mobile-dock {
     position: fixed;
