@@ -15,6 +15,25 @@ import { createDraftDefaults, normalizeLinks } from "./utils/entities.js";
 
 const todayKey = toDateKey(new Date());
 
+const NAV_TABS = [
+  { key:"calendar", label:"Calendar", mobileLabel:"Home" },
+  { key:"agenda", label:"Agenda", mobileLabel:"Agenda" },
+  { key:"tasks", label:"Tasks", mobileLabel:"Tasks" },
+  { key:"notes", label:"Notes", mobileLabel:"Notes" },
+  { key:"routines", label:"Routines", mobileLabel:"Routines" },
+  { key:"profile", label:"Profile", mobileLabel:"Me" },
+];
+
+function NavIcon({ type }) {
+  const common = { width:"22", height:"22", viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:"1.9", strokeLinecap:"round", strokeLinejoin:"round", "aria-hidden":"true" };
+  if (type === "calendar") return <svg {...common}><rect x="4" y="5" width="16" height="15" rx="4" /><path d="M8 3v4M16 3v4M4 10h16" /></svg>;
+  if (type === "agenda") return <svg {...common}><path d="M8 6h12M8 12h12M8 18h12" /><path d="M4 6h.01M4 12h.01M4 18h.01" /></svg>;
+  if (type === "tasks") return <svg {...common}><path d="m5 12 4 4L19 6" /><path d="M4 20h16" /></svg>;
+  if (type === "notes") return <svg {...common}><path d="M6 4h9l3 3v13H6z" /><path d="M14 4v4h4M9 12h6M9 16h4" /></svg>;
+  if (type === "routines") return <svg {...common}><path d="M17 2l3 3-3 3" /><path d="M4 11V9a4 4 0 0 1 4-4h12" /><path d="M7 22l-3-3 3-3" /><path d="M20 13v2a4 4 0 0 1-4 4H4" /></svg>;
+  return <svg {...common}><circle cx="12" cy="8" r="4" /><path d="M5 21a7 7 0 0 1 14 0" /></svg>;
+}
+
 function createItemId() {
   if (crypto.randomUUID) return crypto.randomUUID();
   return `item-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -284,16 +303,9 @@ export default function App() {
 
       {/* Desktop nav tabs */}
       <nav className="desktop-nav">
-        {[
-          { key:"calendar", icon:"📅", label:"Calendar" },
-          { key:"agenda", icon:"📋", label:"Agenda" },
-          { key:"tasks", icon:"✅", label:"Tasks" },
-          { key:"notes", icon:"📝", label:"Notes" },
-          { key:"routines", icon:"🔁", label:"Routines" },
-          { key:"profile", icon:"👤", label:"Profile" },
-        ].map((tab) => (
+        {NAV_TABS.map((tab) => (
           <button key={tab.key} className={`nav-tab ${activePage===tab.key ? "active" : ""}`} type="button" onClick={() => setActivePage(tab.key)}>
-            <span>{tab.icon}</span> {tab.label}
+            <span className="nav-icon"><NavIcon type={tab.key} /></span> {tab.label}
           </button>
         ))}
       </nav>
@@ -361,17 +373,10 @@ export default function App() {
 
       {/* Mobile dock */}
       <nav className="mobile-dock">
-        {[
-          { key:"calendar", icon:"📅", label:"Cal" },
-          { key:"agenda", icon:"📋", label:"Agenda" },
-          { key:"tasks", icon:"✅", label:"Tasks" },
-          { key:"notes", icon:"📝", label:"Notes" },
-          { key:"routines", icon:"🔁", label:"Routines" },
-          { key:"profile", icon:"👤", label:"Me" },
-        ].map((tab) => (
+        {NAV_TABS.map((tab) => (
           <button key={tab.key} className={`dock-btn ${activePage===tab.key?"dock-active":""}`} type="button" onClick={() => setActivePage(tab.key)}>
-            <span className="dock-icon">{tab.icon}</span>
-            <span className="dock-label">{tab.label}</span>
+            <span className="dock-icon"><NavIcon type={tab.key} /></span>
+            <span className="dock-label">{tab.mobileLabel}</span>
           </button>
         ))}
       </nav>
