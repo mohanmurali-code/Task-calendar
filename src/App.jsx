@@ -1,13 +1,13 @@
 import { useMemo, useState, useCallback } from "react";
 import { localStorageAdapter as storage } from "./storage/localStorageAdapter.js";
 import { formatDateKey, fromDateKey, toDateKey } from "./utils/date.js";
+import { useToast } from "./components/ToastProvider.jsx";
 import CalendarPanel from "./components/CalendarPanel.jsx";
 import ItemFeed from "./components/ItemFeed.jsx";
 import Composer from "./components/Composer.jsx";
 import PomodoroTimer from "./components/PomodoroTimer.jsx";
 import AgendaPage from "./pages/AgendaPage.jsx";
-import TasksPage from "./pages/TasksPage.jsx";
-import NotesPage from "./pages/NotesPage.jsx";
+import ItemsPage from "./pages/ItemsPage.jsx";
 import RoutinesPage from "./pages/RoutinesPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import LinkDialog from "./components/LinkDialog.jsx";
@@ -17,9 +17,7 @@ const todayKey = toDateKey(new Date());
 
 const NAV_TABS = [
   { key:"calendar", label:"Calendar", mobileLabel:"Home" },
-  { key:"agenda", label:"Agenda", mobileLabel:"Agenda" },
-  { key:"tasks", label:"Tasks", mobileLabel:"Tasks" },
-  { key:"notes", label:"Notes", mobileLabel:"Notes" },
+  { key:"items", label:"Items", mobileLabel:"Items" },
   { key:"routines", label:"Routines", mobileLabel:"Routines" },
   { key:"profile", label:"Profile", mobileLabel:"Me" },
 ];
@@ -43,6 +41,7 @@ const POMO_DURATIONS = { focus: 25*60, shortBreak: 5*60, longBreak: 15*60 };
 const INITIAL_POMO = { activeTaskId:null, activeTaskTitle:"", timeLeft:POMO_DURATIONS.focus, phase:"focus", sessionCount:0, isRunning:false };
 
 export default function App() {
+  const addToast = useToast();
   const [items, setItems] = useState(() => storage.loadItems());
   const [tags, setTags] = useState(() => storage.loadTags());
   const [routines, setRoutines] = useState(() => storage.loadRoutines());
@@ -68,10 +67,15 @@ export default function App() {
   const [linkingItem, setLinkingItem] = useState(null);
 
   // Long-press agenda opener
-  window.__openAgenda = () => setActivePage("agenda");
+  window.__openAgenda = () => setActivePage("calendar");
 
   // ── Persistence ───────────────────────────────────────
-  function persist(next) { setItems(next); storage.saveItems(next); }
+  function persist(next) {
+    setItems(next);
+    const ok = storage.saveItems(next);
+    if (!ok) addToast("Could not save locally. Free up storage and try again.", "error", 4500);
+    return ok;
+  }
   function persistTags(t) { setTags(t); storage.saveTags(t); }
   function persistRoutines(r) { setRoutines(r); storage.saveRoutines(r); }
   function persistProfile(p) { setProfile(p); storage.saveProfile(p); }
@@ -122,7 +126,7 @@ export default function App() {
     if (mode==="tasks") {
       if (!taskDraft.title.trim()) return;
       const done = taskDraft.status === "completed";
-      persist([...items, {
+      const success = persist([...items, {
         id:createItemId(),
         date:selectedDate,
         type:"task",
@@ -151,11 +155,11 @@ export default function App() {
         createdAt:ts,
         updatedAt:ts,
       }]);
-      setTaskDraft(createDraftDefaults({ dueDate:selectedDate, startDate:selectedDate }));
+      if (success) setTaskDraft(createDraftDefaults({ dueDate:selectedDate, startDate:selectedDate }));
     } else {
       if (!noteDraft.title?.trim()) return;
       const done = noteDraft.status === "completed";
-      persist([...items, {
+      const success = persist([...items, {
         id:createItemId(),
         date:selectedDate,
         type:"note",
@@ -184,8 +188,19 @@ export default function App() {
         createdAt:ts,
         updatedAt:ts,
       }]);
-      setNoteDraft(createDraftDefaults({ dueDate:selectedDate, startDate:selectedDate, isPinned:false }));
+      if (success) setNoteDraft(createDraftDefaults({ dueDate:selectedDate, startDate:selectedDate, isPinned:false }));
     }
+  }
+
+  function addTaskAtTime(time) {
+    setMode("tasks");
+    setTaskDraft((d) => ({ ...d, startTime: time, time }));
+    setActivePage("calendar");
+  }
+
+  function addQuickNote() {
+    setMode("notes");
+    setActivePage("calendar");
   }
 
   function toggleDone(id) {
@@ -285,9 +300,21 @@ export default function App() {
         <div className="brand">
           <div className="brand-mark">TC</div>
           <div>
-            <h1>Task Calendar</h1>
-            <p className="muted">Plan · Focus · Achieve</p>
+            <h1>Task Calendar Today</h1>
+            <p className="muted">Simple planning for the day</p>
           </div>
+        </div>
+        <div className="story-rings" aria-label="Quick day status">
+          {[
+            { key: "task", label: "Tasks", value: items.filter((i) => i.type === "task").length },
+            { key: "done", label: "Done", value: items.filter((i) => i.type === "task" && i.done).length },
+            { key: "note", label: "Notes", value: items.filter((i) => i.type === "note").length },
+          ].map((ring) => (
+            <button key={ring.key} className="story-ring" type="button" onClick={() => setActivePage("calendar")}>
+              <span className="story-ring-inner">{ring.value}</span>
+              <span className="story-ring-label">{ring.label}</span>
+            </button>
+          ))}
         </div>
         <div className="actions">
           {activePage==="calendar" && (
@@ -351,16 +378,33 @@ export default function App() {
         </section>
       )}
 
-      {activePage==="agenda" && (
-        <AgendaPage items={items} tags={tags} routines={routines} selectedDate={selectedDate} onSelectDate={selectDate} onToggleDone={toggleDone} onDelete={deleteItem} onAddAtTime={(t) => { setMode("tasks"); setTaskDraft((d) => ({...d, time:t})); setActivePage("calendar"); }} />
+      {activePage==="calendar" && (
+        <AgendaPage
+          embedded
+          items={items}
+          tags={tags}
+          routines={routines}
+          selectedDate={selectedDate}
+          onSelectDate={selectDate}
+          onToggleDone={toggleDone}
+          onDelete={deleteItem}
+          onAddAtTime={addTaskAtTime}
+          onAddQuickNote={addQuickNote}
+        />
       )}
 
-      {activePage==="tasks" && (
-        <TasksPage items={items} tags={tags} routines={routines} onToggleDone={toggleDone} onDelete={deleteItem} onConvert={convertItem} onUpdateItem={updateItem} onStartPomodoro={startPomodoro} onOpenLinkDialog={setLinkingItem} />
-      )}
-
-      {activePage==="notes" && (
-        <NotesPage items={items} tags={tags} routines={routines} onDelete={deleteItem} onUpdateItem={updateItem} onConvert={convertItem} />
+      {activePage==="items" && (
+        <ItemsPage
+          items={items}
+          tags={tags}
+          routines={routines}
+          onToggleDone={toggleDone}
+          onDelete={deleteItem}
+          onConvert={convertItem}
+          onUpdateItem={updateItem}
+          onStartPomodoro={startPomodoro}
+          onOpenLinkDialog={setLinkingItem}
+        />
       )}
 
       {activePage==="routines" && (

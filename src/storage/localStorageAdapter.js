@@ -58,7 +58,12 @@ export const localStorageAdapter = {
   },
 
   saveItems(items) {
-    localStorage.setItem(ITEMS_KEY, JSON.stringify(items));
+    try {
+      localStorage.setItem(ITEMS_KEY, JSON.stringify(items));
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   clearItems() { localStorage.removeItem(ITEMS_KEY); },

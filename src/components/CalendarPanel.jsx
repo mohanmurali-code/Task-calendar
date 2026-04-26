@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { buildMonthDays, formatDateKey, monthLabel } from "../utils/date.js";
 
 const todayKey = (() => {
@@ -8,31 +8,41 @@ const todayKey = (() => {
 
 export default function CalendarPanel({ currentMonth, items, monthStats, onSelectDate, onChangeMonth, selectedDate }) {
   const month = buildMonthDays(currentMonth);
-  const [dragState, setDragState] = useState({ isDragging: false, startX: 0, startY: 0, currentX: 0 });
+  const [dragState, setDragState] = useState({ isDragging: false, isSwiping: false, startX: 0, startY: 0, currentX: 0 });
   const [animating, setAnimating] = useState(false);
   const [dragX, setDragX] = useState(0);
   const [pressingKey, setPressingKey] = useState(null);
-  const longPressRefs = {};
+  const longPressTimersRef = useRef({});
+  const longPressTriggeredRef = useRef({});
+  const pointerToDayKeyRef = useRef({});
 
   function handlePointerDown(e) {
     if (animating) return;
-    e.target.setPointerCapture(e.pointerId);
-    setDragState({ isDragging: true, startX: e.clientX, startY: e.clientY, currentX: e.clientX });
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragState({ isDragging: true, isSwiping: false, startX: e.clientX, startY: e.clientY, currentX: e.clientX });
   }
 
   function handlePointerMove(e) {
     if (!dragState.isDragging) return;
-    setDragState((prev) => ({ ...prev, currentX: e.clientX }));
+    const dx = e.clientX - dragState.startX;
+    const dy = e.clientY - dragState.startY;
+    const horizontalSwipe = Math.abs(dx) > 26 && Math.abs(dx) > Math.abs(dy) * 1.2;
+    if (horizontalSwipe && !dragState.isSwiping) {
+      const key = pointerToDayKeyRef.current[e.pointerId];
+      if (key) cancelLongPress(key);
+    }
+    setDragState((prev) => ({ ...prev, currentX: e.clientX, isSwiping: prev.isSwiping || horizontalSwipe }));
   }
 
   function handlePointerUp(e) {
     if (!dragState.isDragging) return;
-    e.target.releasePointerCapture(e.pointerId);
+    e.currentTarget.releasePointerCapture(e.pointerId);
     const dx = e.clientX - dragState.startX;
     const dy = e.clientY - dragState.startY;
-    setDragState({ isDragging: false, startX: 0, startY: 0, currentX: 0 });
+    setDragState({ isDragging: false, isSwiping: false, startX: 0, startY: 0, currentX: 0 });
+    delete pointerToDayKeyRef.current[e.pointerId];
 
-    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+    if (Math.abs(dx) > 52 && Math.abs(dx) > Math.abs(dy) * 1.2) {
       const direction = dx < 0 ? 1 : -1;
       setAnimating(true);
       setDragX(direction > 0 ? -window.innerWidth : window.innerWidth);
@@ -51,9 +61,13 @@ export default function CalendarPanel({ currentMonth, items, monthStats, onSelec
   }
 
   function startLongPress(key, e) {
+    pointerToDayKeyRef.current[e.pointerId] = key;
     setPressingKey(key);
-    longPressRefs[key] = setTimeout(() => {
+    longPressTriggeredRef.current[key] = false;
+    clearTimeout(longPressTimersRef.current[key]);
+    longPressTimersRef.current[key] = setTimeout(() => {
       setPressingKey(null);
+      longPressTriggeredRef.current[key] = true;
       if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
       onSelectDate(key);
       if (typeof window.__openAgenda === "function") window.__openAgenda();
@@ -62,7 +76,8 @@ export default function CalendarPanel({ currentMonth, items, monthStats, onSelec
 
   function cancelLongPress(key) {
     setPressingKey(null);
-    clearTimeout(longPressRefs[key]);
+    clearTimeout(longPressTimersRef.current[key]);
+    delete longPressTimersRef.current[key];
   }
 
   const currentDragX = dragState.isDragging ? dragState.currentX - dragState.startX : dragX;
@@ -108,8 +123,16 @@ export default function CalendarPanel({ currentMonth, items, monthStats, onSelec
               className={`day ${key === todayKey ? "is-today" : ""} ${key === selectedDate ? "is-selected" : ""} ${heatLevel} ${pressingKey === key ? "pressing" : ""}`}
               type="button"
               key={key}
-              onPointerDown={(e) => { e.stopPropagation(); startLongPress(key, e); }}
-              onPointerUp={(e) => { e.stopPropagation(); cancelLongPress(key); onSelectDate(key); }}
+              onPointerDown={(e) => { startLongPress(key, e); }}
+              onPointerUp={() => {
+                const wasLongPress = Boolean(longPressTriggeredRef.current[key]);
+                cancelLongPress(key);
+                if (wasLongPress) {
+                  longPressTriggeredRef.current[key] = false;
+                  return;
+                }
+                if (!dragState.isSwiping) onSelectDate(key);
+              }}
               onPointerLeave={() => cancelLongPress(key)}
               onPointerCancel={() => cancelLongPress(key)}
             >

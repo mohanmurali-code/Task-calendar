@@ -12,7 +12,18 @@ function formatHour(h) {
 
 function pad(n) { return String(n).padStart(2, "0"); }
 
-export default function AgendaPage({ items, tags, routines, selectedDate, onSelectDate, onToggleDone, onDelete, onAddAtTime }) {
+export default function AgendaPage({
+  items,
+  tags,
+  routines,
+  selectedDate,
+  onSelectDate,
+  onToggleDone,
+  onDelete,
+  onAddAtTime,
+  onAddQuickNote,
+  embedded = false,
+}) {
   const [agendaMode, setAgendaMode] = useState("day"); // "day"|"week"|"month"
   const [weekAnchor, setWeekAnchor] = useState(() => fromDateKey(selectedDate));
   const [monthAnchor, setMonthAnchor] = useState(() => {
@@ -21,6 +32,7 @@ export default function AgendaPage({ items, tags, routines, selectedDate, onSele
   });
   
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [timelineExpanded, setTimelineExpanded] = useState(true);
 
   // Update current time every minute for the indicator
   useEffect(() => {
@@ -34,6 +46,9 @@ export default function AgendaPage({ items, tags, routines, selectedDate, onSele
   const dayItems = useMemo(() => items.filter((i) => i.date === selectedDate), [items, selectedDate]);
   const timed = dayItems.filter((i) => i.time);
   const unscheduled = dayItems.filter((i) => !i.time);
+  const dayTasks = dayItems.filter((i) => i.type === "task");
+  const dayNotes = dayItems.filter((i) => i.type === "note");
+  const doneTasks = dayTasks.filter((i) => i.done).length;
 
   function itemsAtHour(h) { return timed.filter((i) => { const [hh] = (i.time||"00:00").split(":").map(Number); return hh === h; }); }
 
@@ -67,7 +82,7 @@ export default function AgendaPage({ items, tags, routines, selectedDate, onSele
   function goToday() { agendaMode==="day" ? onSelectDate(todayKey) : agendaMode==="week" ? setWeekAnchor(new Date()) : setMonthAnchor(new Date(new Date().getFullYear(), new Date().getMonth(), 1)); }
 
   return (
-    <div className="page agenda-page">
+    <div className={embedded ? "agenda-inline" : "page agenda-page"}>
       {/* Agenda nav */}
       <div className="agenda-nav">
         <div className="view-toggle">
@@ -84,6 +99,17 @@ export default function AgendaPage({ items, tags, routines, selectedDate, onSele
         </div>
         <div className="agenda-nav-label">{navLabel}</div>
       </div>
+      <div className="agenda-summary-row">
+        <span className="stat-chip">{dayTasks.length} tasks</span>
+        <span className="stat-chip done-chip">{doneTasks} done</span>
+        <span className="stat-chip">{dayNotes.length} notes</span>
+        <button className="pill-btn" type="button" onClick={() => setTimelineExpanded((v) => !v)}>
+          {timelineExpanded ? "Minimize timeline" : "Expand timeline"}
+        </button>
+        {onAddQuickNote && (
+          <button className="pill-btn" type="button" onClick={onAddQuickNote}>Add note</button>
+        )}
+      </div>
 
       {/* ── Day View ── */}
       {agendaMode === "day" && (
@@ -98,7 +124,7 @@ export default function AgendaPage({ items, tags, routines, selectedDate, onSele
               ))}
             </div>
           )}
-          <div className="agenda-timeline" style={{ position: "relative" }}>
+          <div className={`agenda-timeline ${timelineExpanded ? "" : "is-minimized"}`} style={{ position: "relative" }}>
             {/* Current Time Indicator */}
             {selectedDate === todayKey && (
               <div 
@@ -120,7 +146,7 @@ export default function AgendaPage({ items, tags, routines, selectedDate, onSele
               </div>
             )}
 
-            {HOURS.map((h) => {
+            {(timelineExpanded ? HOURS : HOURS.filter((h) => h >= 8 && h <= 18)).map((h) => {
               const slotItems = itemsAtHour(h);
               const slotRoutines = routinesAtHour(h);
               return (

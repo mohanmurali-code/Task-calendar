@@ -2,18 +2,18 @@
 
 /* ── Tokens ──────────────────────────────────────────── */
 :root {
-  --bg: #f6f7fb;
-  --ink: #171717;
-  --muted: #70727a;
-  --line: #e7e7ec;
-  --soft: #fafafa;
+  --bg: #f7f8fa;
+  --ink: #191d23;
+  --muted: #6e7480;
+  --line: #e4e8ef;
+  --soft: #f3f5f8;
   --pink: #f45d8f;
   --orange: #ff9d47;
   --violet: #7c4dff;
   --green: #1fa97a;
   --blue: #2196f3;
-  --shadow: 0 24px 80px rgba(27,29,43,.12);
-  --radius-card: 28px;
+  --shadow: 0 10px 30px rgba(27,29,43,.08);
+  --radius-card: 22px;
   --radius-btn: 999px;
   color: var(--ink);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -44,10 +44,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(244,93,143,.16), transparent 34rem),
-    radial-gradient(circle at bottom right, rgba(255,157,71,.14), transparent 28rem),
-    var(--bg);
+  background: var(--bg);
 }
 
 button, input, select, textarea { font: inherit; }
@@ -71,10 +68,9 @@ h1 {
 
 /* ── Glassmorphism surfaces ──────────────────────────── */
 .topbar, .panel, .sidebar-card, .composer {
-  background: rgba(255,255,255,.9);
-  border: 1px solid rgba(255,255,255,.85);
+  background: #fff;
+  border: 1px solid var(--line);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(18px);
 }
 
 /* ── Topbar ──────────────────────────────────────────── */
@@ -87,6 +83,34 @@ h1 {
   padding: 14px 18px;
   border-radius: 24px;
 }
+
+.story-rings {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.story-ring {
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+  background: transparent;
+  border: none;
+}
+.story-ring-inner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid transparent;
+  background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, rgba(242,90,142,.95), rgba(124,77,255,.9));
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+}
+.story-ring-label { font-size: 11px; color: var(--muted); font-weight: 600; }
 
 .brand, .actions { display: flex; align-items: center; }
 .brand { gap: 12px; min-width: 0; }
@@ -144,9 +168,9 @@ h1 {
 .pill-btn { gap: 8px; padding: 0 16px; font-weight: 700; white-space: nowrap; }
 .primary {
   color: #fff;
-  background: linear-gradient(135deg, var(--orange), var(--pink));
+  background: var(--violet);
   border-color: transparent;
-  box-shadow: 0 8px 24px rgba(244,93,143,.32);
+  box-shadow: none;
 }
 .icon-btn:hover, .pill-btn:hover, .tab-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,29,43,.1); }
 
@@ -647,14 +671,14 @@ h1 {
 
 .modal-card {
   background: #fff;
-  border-radius: 24px;
+  border-radius: 18px;
   width: min(480px, 100%);
   max-height: 85vh;
   overflow-y: auto;
-  padding: 20px;
-  box-shadow: 0 40px 120px rgba(0,0,0,.25);
+  padding: 16px;
+  box-shadow: 0 18px 48px rgba(0,0,0,.2);
   display: grid;
-  gap: 16px;
+  gap: 12px;
   animation: slideUp .2s ease;
 }
 .routine-card { width: min(520px, 100%); }
@@ -749,6 +773,7 @@ h1 {
 
   .topbar, .calendar-head { align-items: flex-start; flex-direction: column; }
   .topbar { border-radius: 20px; }
+  .story-rings { width: 100%; justify-content: flex-start; }
   .actions { width: 100%; justify-content: space-between; }
   .stats { width: 100%; min-width: 0; }
 
@@ -1031,6 +1056,10 @@ h1 {
   flex-direction: column;
   gap: 12px;
 }
+.items-list {
+  display: grid;
+  gap: 12px;
+}
 .note-card-full {
   background: #fff;
   border: 1px solid var(--line);
@@ -1128,9 +1157,9 @@ h1 {
 .profile-section {
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 24px;
-  margin-bottom: 24px;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
 }
 .section-title {
   font-family: Outfit, sans-serif;
@@ -1171,7 +1200,23 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
+}
+.agenda-inline {
+  margin-top: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 16px;
+}
+.agenda-summary-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.agenda-timeline.is-minimized .agenda-row {
+  min-height: 56px !important;
 }
 .agenda-nav-controls {
   display: flex;
